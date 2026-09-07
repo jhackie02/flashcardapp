@@ -1,0 +1,1120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Colorful Flashcards & Teacher Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <!-- Import Yusei Magic and Balsamiq Sans -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Balsamiq+Sans:ital,wght@0,400;0,700;1,400;1,700&family=Yusei+Magic&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-color: #ffe66d;
+            --card-bg: #ffffff;
+            --primary: #ff6b6b;
+            --secondary: #4ecdc4;
+            --accent: #1a535c;
+            --text-dark: #2b2d42;
+            --border-thick: 4px solid #111;
+            --shadow-bold: 6px 6px 0px #111;
+        }
+
+        body {
+            font-family: 'Balsamiq Sans', cursive;
+            background-color: var(--bg-color);
+            background-image: 
+                radial-gradient(circle at 20px 20px, #ffb347 2px, transparent 2px),
+                radial-gradient(circle at 60px 60px, #ffb347 2px, transparent 2px);
+            background-size: 80px 80px;
+            color: var(--text-dark);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            overflow: hidden;
+        }
+
+        h1, h2, h3, .vocab-word, .dashboard-title {
+            font-family: 'Yusei Magic', sans-serif;
+        }
+
+        /* --- Neo-Brutalist UI Elements --- */
+        .neo-btn {
+            background-color: var(--card-bg);
+            border: var(--border-thick);
+            border-radius: 12px;
+            padding: 12px 24px;
+            font-size: 1.2rem;
+            font-family: 'Balsamiq Sans', cursive;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: var(--shadow-bold);
+            transition: all 0.1s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            color: var(--text-dark);
+            text-transform: uppercase;
+        }
+
+        .neo-btn:active {
+            transform: translate(6px, 6px);
+            box-shadow: 0px 0px 0px #111;
+        }
+
+        .neo-btn.btn-red { background-color: #ff6b6b; color: white; }
+        .neo-btn.btn-blue { background-color: #4ecdc4; }
+        .neo-btn.btn-yellow { background-color: #fca311; }
+        .neo-btn.btn-green { background-color: #2a9d8f; color: white; }
+        .neo-btn.btn-purple { background-color: #9d4edd; color: white; }
+
+        .neo-input {
+            border: var(--border-thick);
+            border-radius: 8px;
+            padding: 10px;
+            font-family: 'Balsamiq Sans', cursive;
+            font-size: 1rem;
+            width: 100%;
+            box-shadow: 3px 3px 0px #111;
+        }
+        
+        .neo-input:focus {
+            outline: none;
+            background-color: #f0f8ff;
+        }
+
+        /* --- View Containers --- */
+        .view-section {
+            display: none;
+            width: 100%;
+            height: 100vh;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .view-section.active {
+            display: flex;
+        }
+
+        /* --- Dashboard --- */
+        #dashboard-view {
+            text-align: center;
+        }
+        .dashboard-title {
+            font-size: 5rem;
+            color: white;
+            text-shadow: 4px 4px 0 #111, -2px -2px 0 #111, 2px -2px 0 #111, -2px 2px 0 #111;
+            margin-bottom: 40px;
+            letter-spacing: 2px;
+            transform: rotate(-2deg);
+        }
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            max-width: 800px;
+            width: 100%;
+        }
+        .dashboard-grid .neo-btn {
+            font-size: 1.5rem;
+            padding: 30px;
+        }
+        .full-width-btn {
+            grid-column: span 2;
+        }
+
+        /* --- Editor --- */
+        .editor-container {
+            background-color: white;
+            border: var(--border-thick);
+            border-radius: 20px;
+            box-shadow: var(--shadow-bold);
+            width: 90%;
+            max-width: 1000px;
+            height: 85vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .editor-header {
+            background-color: #4ecdc4;
+            padding: 20px;
+            border-bottom: var(--border-thick);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .editor-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            background-color: #f7f7f7;
+        }
+        .vocab-row {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            background: white;
+            padding: 15px;
+            border: 3px solid #111;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            box-shadow: 3px 3px 0 #111;
+        }
+        .vocab-row img {
+            width: 60px;
+            height: 60px;
+            object-fit: cover;
+            border-radius: 8px;
+            border: 2px solid #111;
+        }
+        .vocab-row .emoji-preview {
+            width: 60px;
+            height: 60px;
+            font-size: 2.5rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #eee;
+            border-radius: 8px;
+            border: 2px solid #111;
+        }
+        .raw-data-area {
+            width: 100%;
+            height: 150px;
+            font-family: monospace;
+            margin-top: 20px;
+            resize: vertical;
+        }
+
+        /* --- Tablet / Flashcard App --- */
+        .tablet-frame {
+            background-color: #ff9f1c; /* Vibrant Orange Tablet */
+            border: var(--border-thick);
+            border-radius: 40px;
+            padding: 25px;
+            box-shadow: 10px 10px 0px rgba(0,0,0,0.8), inset 0 0 0 6px #cb7c12;
+            position: relative;
+            width: 95vw;
+            max-width: 1024px;
+            height: 90vh;
+            max-height: 768px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .screen {
+            background-color: white;
+            border: var(--border-thick);
+            border-radius: 20px;
+            flex-grow: 1;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .card-container {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            z-index: 1;
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            height: 100%;
+            overflow: hidden; /* Prevents the main card from expanding beyond its height */
+            min-height: 0; /* Flexbox trick to force containment of large images */
+        }
+
+        .image-area {
+            height: 60%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #e0fbfc;
+            border-bottom: var(--border-thick);
+            position: relative;
+            overflow: hidden; /* Prevents image from breaking out of its container */
+            flex-shrink: 0;
+        }
+
+        .text-area {
+            height: 40%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: white;
+            position: relative;
+            overflow: hidden; /* Prevents text from breaking out of its container */
+            flex-shrink: 0;
+        }
+
+        .vocab-word {
+            font-size: 7rem;
+            color: var(--text-dark);
+            text-shadow: 4px 4px 0px #4ecdc4;
+            user-select: none;
+            line-height: 1;
+            text-align: center;
+            max-width: 95%;
+            word-wrap: break-word;
+        }
+
+        .vocab-image-render {
+            width: 100%;
+            height: 100%;
+            padding: 10px;
+            box-sizing: border-box;
+            object-fit: contain; /* Scales the image while maintaining aspect ratio */
+            background: transparent;
+            pointer-events: auto; /* Ensures it remains clickable for fullscreen */
+        }
+
+        .vocab-emoji-render {
+            font-size: 12rem;
+            user-select: none;
+            filter: drop-shadow(6px 6px 0px rgba(0,0,0,0.2));
+        }
+
+        .cover-overlay {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: repeating-linear-gradient(
+                45deg,
+                #ff6b6b,
+                #ff6b6b 20px,
+                #ff8787 20px,
+                #ff8787 40px
+            );
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            z-index: 10;
+            transition: opacity 0.3s, transform 0.3s;
+            border: var(--border-thick);
+        }
+
+        .cover-overlay.text-cover {
+            background: repeating-linear-gradient(
+                -45deg,
+                #4ecdc4,
+                #4ecdc4 20px,
+                #78dcd5 20px,
+                #78dcd5 40px
+            );
+        }
+
+        .cover-overlay.revealed {
+            opacity: 0;
+            pointer-events: none;
+            transform: scale(1.05);
+        }
+
+        .question-mark {
+            font-size: 6rem;
+            color: white;
+            font-family: 'Yusei Magic', sans-serif;
+            text-shadow: 4px 4px 0 #111;
+        }
+
+        /* --- Drawing Canvas --- */
+        #drawing-canvas {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 5;
+            pointer-events: none;
+        }
+        #drawing-canvas.active {
+            pointer-events: auto;
+        }
+
+        /* --- Toolbar --- */
+        .toolbar {
+            background-color: var(--card-bg);
+            padding: 15px 25px;
+            border-top: var(--border-thick);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 20;
+            flex-shrink: 0; /* Anchors the control bar so it cannot be pushed out of view */
+        }
+
+        .tool-group {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .tool-btn {
+            background-color: white;
+            border: 3px solid #111;
+            border-radius: 12px;
+            width: 45px;
+            height: 45px;
+            font-size: 1.2rem;
+            color: #111;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 3px 3px 0 #111;
+            transition: all 0.1s;
+        }
+        .tool-btn:active {
+            transform: translate(3px, 3px);
+            box-shadow: 0 0 0 #111;
+        }
+        .tool-btn.active-tool {
+            background-color: #ffc900;
+        }
+
+        .color-swatch {
+            width: 35px; height: 35px;
+            border-radius: 50%;
+            border: 3px solid #111;
+            box-shadow: 2px 2px 0 #111;
+            cursor: pointer;
+            transition: transform 0.1s;
+        }
+        .color-swatch:active { transform: scale(0.9); }
+        .color-swatch.selected { border-width: 5px; transform: scale(1.1); box-shadow: none; }
+
+        .close-btn {
+            position: absolute;
+            top: -20px; right: -20px;
+            background-color: #ff6b6b;
+            color: white;
+            border: var(--border-thick);
+            border-radius: 50%;
+            width: 50px; height: 50px;
+            display: flex; justify-content: center; align-items: center;
+            font-size: 1.5rem;
+            cursor: pointer;
+            z-index: 100;
+            box-shadow: var(--shadow-bold);
+        }
+        .close-btn:active {
+            transform: translate(4px, 4px);
+            box-shadow: 0 0 0 #111;
+        }
+
+        /* Toggles */
+        .toggle-switch { display: flex; align-items: center; gap: 8px; font-weight: bold; }
+        .switch { position: relative; display: inline-block; width: 50px; height: 28px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider {
+            position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #ccc; transition: .4s; border-radius: 28px; border: 3px solid #111;
+        }
+        .slider:before {
+            position: absolute; content: ""; height: 18px; width: 18px;
+            left: 3px; bottom: 2px; background-color: white; transition: .4s;
+            border-radius: 50%; border: 2px solid #111;
+        }
+        input:checked + .slider { background-color: #4ecdc4; }
+        input:checked + .slider:before { transform: translateX(20px); }
+
+        /* Animations */
+        .slide-out-left { transform: translateX(-120%) rotate(-5deg); opacity: 0; }
+        .slide-out-right { transform: translateX(120%) rotate(5deg); opacity: 0; }
+        .slide-in-right { transform: translateX(120%) rotate(5deg); opacity: 0; }
+        .slide-in-left { transform: translateX(-120%) rotate(-5deg); opacity: 0; }
+        .slide-center { transform: translateX(0) rotate(0); opacity: 1; }
+
+        /* View Modes classes */
+        .hide-section { display: none !important; }
+
+        /* --- Modals --- */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(0,0,0,0.8); z-index: 1000;
+            display: flex; justify-content: center; align-items: center;
+        }
+        .modal-content {
+            background: var(--card-bg); padding: 40px; border-radius: 20px;
+            border: var(--border-thick); box-shadow: var(--shadow-bold);
+            text-align: center; max-width: 90%;
+        }
+        .fullscreen-overlay {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(0,0,0,0.95); z-index: 2000;
+            display: flex; justify-content: center; align-items: center;
+            cursor: zoom-out;
+        }
+        #fs-img { max-width: 95vw; max-height: 95vh; object-fit: contain; border-radius: 12px; }
+        #fs-emoji { font-size: 35vh; user-select: none; }
+        .clickable-img { cursor: zoom-in; transition: transform 0.2s; }
+        .clickable-img:hover { transform: scale(1.05); }
+    </style>
+</head>
+<body>
+
+    <div id="dashboard-view" class="view-section active">
+        <h1 class="dashboard-title">Flashcard Master</h1>
+        <div class="dashboard-grid">
+            <button class="neo-btn btn-blue full-width-btn" onclick="showEditor()">
+                <i class="fas fa-edit"></i> Edit Vocabulary List
+            </button>
+            <button class="neo-btn btn-yellow" onclick="triggerImport()">
+                <i class="fas fa-file-import"></i> Import (JSON)
+            </button>
+            <button class="neo-btn btn-purple" onclick="exportData()">
+                <i class="fas fa-file-export"></i> Export (JSON)
+            </button>
+            <button class="neo-btn btn-green" onclick="startApp('lesson')">
+                <i class="fas fa-chalkboard-teacher"></i> Start Lesson (Revealed)
+            </button>
+            <button class="neo-btn btn-red" onclick="startApp('review')">
+                <i class="fas fa-question-circle"></i> Start Review (Covers)
+            </button>
+        </div>
+        <input type="file" id="file-import" accept=".json" style="display: none;" onchange="handleImport(event)">
+    </div>
+
+    <div id="editor-view" class="view-section">
+        <div class="editor-container">
+            <div class="editor-header">
+                <h2><i class="fas fa-edit"></i> Edit List</h2>
+                <button class="neo-btn btn-red" onclick="showDashboard()">
+                    <i class="fas fa-times"></i> Back
+                </button>
+            </div>
+            <div class="editor-content">
+                <div style="margin-bottom: 20px; display: flex; gap: 10px;">
+                    <button class="neo-btn btn-blue" onclick="addVocabRow()">
+                        <i class="fas fa-plus"></i> Add Word
+                    </button>
+                    <button class="neo-btn btn-green" onclick="saveVocabulary()">
+                        <i class="fas fa-save"></i> Save Changes
+                    </button>
+                </div>
+                
+                <div id="vocab-list-container">
+                    <!-- Rows generated by JS -->
+                </div>
+
+                <hr style="border-top: var(--border-thick); margin: 30px 0;">
+                
+                <h3>Advanced: Copy-Paste JSON</h3>
+                <p style="font-size: 0.9em; color: #555;">Paste JSON data here to quick-load, or copy it to share.</p>
+                <textarea id="json-io" class="neo-input raw-data-area"></textarea>
+                <button class="neo-btn btn-yellow" style="margin-top: 10px;" onclick="loadFromJsonText()">
+                    <i class="fas fa-sync"></i> Sync from Textbox
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="flashcard-view" class="view-section">
+        <div class="tablet-frame">
+            <button class="close-btn" title="Exit to Dashboard" onclick="showDashboard()">
+                <i class="fas fa-times"></i>
+            </button>
+
+            <div class="screen" id="app-screen">
+                
+                <!-- Canvas for drawing on top -->
+                <canvas id="drawing-canvas"></canvas>
+
+                <!-- Card Content -->
+                <div class="card-container slide-center" id="card-container">
+                    <!-- Upper Image Area -->
+                    <div class="image-area" id="area-image">
+                        <img id="vocab-img" class="vocab-image-render clickable-img" src="" alt="" style="display: none;" onclick="enlargeImage()">
+                        <div id="vocab-emoji" class="vocab-emoji-render clickable-img" style="display: none;" onclick="enlargeImage()">❓</div>
+                        
+                        <div class="cover-overlay" id="cover-img" onclick="reveal('img')">
+                            <span class="question-mark">?</span>
+                        </div>
+                    </div>
+
+                    <!-- Lower Text Area -->
+                    <div class="text-area" id="area-text">
+                        <div id="vocab-text" class="vocab-word">Word</div>
+                        
+                        <div class="cover-overlay text-cover" id="cover-text" onclick="reveal('text')">
+                            <span class="question-mark">?</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="toolbar">
+                    <!-- Left: Drawing Tools -->
+                    <div class="tool-group">
+                        <button class="tool-btn" id="tool-cursor" title="Cursor" onclick="setTool('cursor')">
+                            <i class="fas fa-mouse-pointer"></i>
+                        </button>
+                        <button class="tool-btn active-tool" id="tool-pen" title="Pen" onclick="setTool('pen')">
+                            <i class="fas fa-pen"></i>
+                        </button>
+                        <button class="tool-btn" id="tool-eraser" title="Eraser" onclick="setTool('eraser')">
+                            <i class="fas fa-eraser"></i>
+                        </button>
+                        <button class="tool-btn" title="Clear All" onclick="clearCanvas()">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                        
+                        <div style="width: 3px; height: 30px; background: #111; margin: 0 5px;"></div>
+                        
+                        <div class="color-swatch selected" style="background-color: #000000;" onclick="setColor('#000000', this)"></div>
+                        <div class="color-swatch" style="background-color: #ff6b6b;" onclick="setColor('#ff6b6b', this)"></div>
+                        <div class="color-swatch" style="background-color: #fca311;" onclick="setColor('#fca311', this)"></div>
+                        <div class="color-swatch" style="background-color: #4ecdc4;" onclick="setColor('#4ecdc4', this)"></div>
+                        <div class="color-swatch" style="background-color: #1a535c;" onclick="setColor('#1a535c', this)"></div>
+                    </div>
+
+                    <!-- Right: Navigation & Audio -->
+                    <div class="tool-group">
+                        <div class="toggle-switch" title="Auto Sound">
+                            <i class="fas fa-robot"></i>
+                            <label class="switch">
+                                <input type="checkbox" id="auto-sound-toggle" checked>
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                        
+                        <button class="neo-btn btn-blue" onclick="playSound()" title="Play Sound" style="padding: 10px; min-width: 50px;">
+                            <i class="fas fa-volume-up"></i>
+                        </button>
+
+                        <div style="width: 3px; height: 30px; background: #111; margin: 0 5px;"></div>
+
+                        <button class="neo-btn btn-yellow" onclick="prevCard()" title="Previous" style="padding: 10px;">
+                            <i class="fas fa-chevron-left"></i>
+                        </button>
+                        <button class="neo-btn btn-purple" onclick="shuffleCard()" title="Random" style="padding: 10px;">
+                            <i class="fas fa-random"></i>
+                        </button>
+                        <button class="neo-btn btn-yellow" onclick="nextCard()" title="Next" style="padding: 10px;">
+                            <i class="fas fa-chevron-right"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mode Selector Modal -->
+    <div id="mode-selector-modal" class="modal-overlay hide-section">
+        <div class="modal-content">
+            <h2 style="font-family: 'Yusei Magic', sans-serif; font-size: 2.5rem; margin-bottom: 20px;">Select View Mode</h2>
+            <div style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
+                <button class="neo-btn btn-blue" onclick="confirmMode('both')">
+                    <i class="fas fa-layer-group"></i> Both
+                </button>
+                <button class="neo-btn btn-yellow" onclick="confirmMode('pic')">
+                    <i class="fas fa-image"></i> Picture Only
+                </button>
+                <button class="neo-btn btn-purple" onclick="confirmMode('word')">
+                    <i class="fas fa-font"></i> Word Only
+                </button>
+            </div>
+            <button class="neo-btn btn-red" onclick="closeModeSelector()" style="margin-top: 30px;">
+                <i class="fas fa-times"></i> Cancel
+            </button>
+        </div>
+    </div>
+
+    <!-- Fullscreen Image Modal -->
+    <div id="fullscreen-modal" class="fullscreen-overlay hide-section" onclick="closeFullscreen()">
+        <img id="fs-img" src="" style="display: none;">
+        <div id="fs-emoji" style="display: none;">❓</div>
+    </div>
+
+    <script>
+        // --- State Management ---
+        let vocabularyList = [
+            { word: "Cat", image: "🐱", isEmoji: true, audioText: "Cat" },
+            { word: "Dog", image: "🐶", isEmoji: true, audioText: "Dog" },
+            { word: "Apple", image: "🍎", isEmoji: true, audioText: "Apple" },
+            { word: "Tree", image: "🌳", isEmoji: true, audioText: "Tree" },
+            { word: "Sun", image: "☀️", isEmoji: true, audioText: "Sun" },
+            { word: "Rainbow", image: "🌈", isEmoji: true, audioText: "Rainbow" }
+        ];
+
+        let currentIndex = 0;
+        let appMode = 'lesson'; // 'lesson' (revealed) or 'review' (covered)
+        let currentViewMode = 'both'; // 'both', 'pic', 'word'
+
+        // --- DOM Elements ---
+        const viewDashboard = document.getElementById('dashboard-view');
+        const viewEditor = document.getElementById('editor-view');
+        const viewFlashcard = document.getElementById('flashcard-view');
+        
+        const imgArea = document.getElementById('area-image');
+        const textArea = document.getElementById('area-text');
+        const imgElement = document.getElementById('vocab-img');
+        const emojiElement = document.getElementById('vocab-emoji');
+        const textElement = document.getElementById('vocab-text');
+        const coverImg = document.getElementById('cover-img');
+        const coverText = document.getElementById('cover-text');
+        const cardContainer = document.getElementById('card-container');
+        const autoSoundToggle = document.getElementById('auto-sound-toggle');
+        const jsonIo = document.getElementById('json-io');
+        const vocabListContainer = document.getElementById('vocab-list-container');
+
+        // --- Navigation & Flow ---
+        function hideAllViews() {
+            viewDashboard.classList.remove('active');
+            viewEditor.classList.remove('active');
+            viewFlashcard.classList.remove('active');
+        }
+
+        function showDashboard() {
+            hideAllViews();
+            viewDashboard.classList.add('active');
+        }
+
+        function showEditor() {
+            hideAllViews();
+            viewEditor.classList.add('active');
+            renderEditorList();
+            updateJsonTextarea();
+        }
+
+        function renderEditorList() {
+            vocabListContainer.innerHTML = '';
+            vocabularyList.forEach((item, index) => {
+                const row = document.createElement('div');
+                row.className = 'vocab-row';
+                
+                // Preview
+                let previewHTML = item.isEmoji 
+                    ? `<div class="emoji-preview">${item.image || '❓'}</div>`
+                    : `<img src="${item.image}" onerror="this.src='https://placehold.co/60x60/eee/111?text=?'">`;
+
+                // Abbreviate huge base64 strings so they don't break/freeze the input UI
+                let displayImageValue = item.image;
+                if (displayImageValue && displayImageValue.startsWith('data:image') && displayImageValue.length > 50) {
+                    displayImageValue = '[Base64 Image Data]';
+                }
+
+                row.innerHTML = `
+                    ${previewHTML}
+                    <div style="flex:1;">
+                        <input type="text" class="neo-input" placeholder="Word" value="${item.word}" onchange="updateTempData(${index}, 'word', this.value)">
+                    </div>
+                    <div style="flex:2; display: flex; flex-direction: column; gap: 5px; min-width: 0;">
+                        <div style="display: flex; gap: 5px; width: 100%;">
+                            <input type="text" class="neo-input" placeholder="Emoji, URL, or Paste Image" value="${displayImageValue}" 
+                                   onchange="updateTempData(${index}, 'image', this.value)" 
+                                   onpaste="handlePaste(event, ${index})">
+                            <button class="neo-btn btn-yellow" onclick="document.getElementById('file-upload-${index}').click()" style="padding: 10px; font-size: 1rem;" title="Upload Local Image">
+                                <i class="fas fa-upload"></i>
+                            </button>
+                            <input type="file" id="file-upload-${index}" accept="image/*" style="display: none;" onchange="handleImageUpload(event, ${index})">
+                        </div>
+                        <small style="color: #666; font-size: 0.8rem; font-family: sans-serif;">(Or click input and press Ctrl+V to paste copied image)</small>
+                    </div>
+                    <button class="tool-btn" style="background:#ff6b6b; color:white;" onclick="removeVocabRow(${index})">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                `;
+                vocabListContainer.appendChild(row);
+            });
+        }
+
+        function updateTempData(index, field, value) {
+            if (field === 'image' && value === '[Base64 Image Data]') {
+                return; // Ignore change if it's just the placeholder text for base64
+            }
+
+            vocabularyList[index][field] = value;
+            if (field === 'word') {
+                vocabularyList[index].audioText = value; // Keep audio synced by default
+            }
+            if (field === 'image') {
+                // Heuristic: If it's a short string and doesn't look like a URL or Base64, assume emoji
+                vocabularyList[index].isEmoji = !(value.startsWith('http') || value.startsWith('data:image') || value.length > 15);
+                if(!value) {
+                    vocabularyList[index].isEmoji = true;
+                    vocabularyList[index].image = '❓';
+                }
+                renderEditorList(); // Re-render to update preview
+            }
+            updateJsonTextarea();
+        }
+
+        function addVocabRow() {
+            vocabularyList.push({ word: "New", image: "✨", isEmoji: true, audioText: "New" });
+            renderEditorList();
+            updateJsonTextarea();
+        }
+
+        function handleImageUpload(event, index) {
+            const file = event.target.files[0];
+            if (file) {
+                processImageFile(file, index);
+            }
+        }
+
+        function handlePaste(event, index) {
+            const clipboardData = event.clipboardData || window.clipboardData;
+            if (!clipboardData) return;
+
+            const items = clipboardData.items;
+            for (let i = 0; i < items.length; i++) {
+                const item = items[i];
+                if (item.type.indexOf('image') !== -1) {
+                    const file = item.getAsFile();
+                    processImageFile(file, index);
+                    event.preventDefault(); // Prevent pasting filename text into the field
+                    break;
+                }
+            }
+        }
+
+        function processImageFile(file, index) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                vocabularyList[index].image = e.target.result; // Base64 string
+                vocabularyList[index].isEmoji = false;
+                renderEditorList();
+                updateJsonTextarea();
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function removeVocabRow(index) {
+            vocabularyList.splice(index, 1);
+            renderEditorList();
+            updateJsonTextarea();
+        }
+
+        function saveVocabulary() {
+            // Data is already updated in the array via updateTempData
+            alert("Vocabulary saved!");
+            showDashboard();
+        }
+
+        function updateJsonTextarea() {
+            jsonIo.value = JSON.stringify(vocabularyList, null, 2);
+        }
+
+        function loadFromJsonText() {
+            try {
+                const parsed = JSON.parse(jsonIo.value);
+                if (Array.isArray(parsed)) {
+                    vocabularyList = parsed;
+                    renderEditorList();
+                    alert("Data loaded successfully!");
+                } else {
+                    alert("Invalid JSON format. Must be an array.");
+                }
+            } catch (e) {
+                alert("Error parsing JSON: " + e.message);
+            }
+        }
+
+        function triggerImport() {
+            document.getElementById('file-import').click();
+        }
+
+        function handleImport(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const parsed = JSON.parse(e.target.result);
+                    if (Array.isArray(parsed)) {
+                        vocabularyList = parsed;
+                        alert("Vocabulary imported successfully!");
+                    }
+                } catch (err) {
+                    alert("Failed to parse JSON file.");
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function exportData() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(vocabularyList, null, 2));
+            const downloadAnchorNode = document.createElement('a');
+            downloadAnchorNode.setAttribute("href", dataStr);
+            downloadAnchorNode.setAttribute("download", "vocabulary_list.json");
+            document.body.appendChild(downloadAnchorNode);
+            downloadAnchorNode.click();
+            downloadAnchorNode.remove();
+        }
+
+        let pendingAppMode = '';
+
+        function startApp(mode) {
+            if (vocabularyList.length === 0) {
+                alert("Vocabulary list is empty! Please edit and add words first.");
+                return;
+            }
+            pendingAppMode = mode;
+            document.getElementById('mode-selector-modal').classList.remove('hide-section');
+        }
+
+        function closeModeSelector() {
+            document.getElementById('mode-selector-modal').classList.add('hide-section');
+        }
+
+        function confirmMode(viewMode) {
+            document.getElementById('mode-selector-modal').classList.add('hide-section');
+            appMode = pendingAppMode;
+            currentIndex = 0;
+            currentViewMode = viewMode;
+            
+            hideAllViews();
+            viewFlashcard.classList.add('active');
+            
+            applyFixedLayout();
+            
+            setTimeout(resizeCanvas, 100);
+            loadCard(currentIndex, 'slide-center');
+        }
+
+        function applyFixedLayout() {
+            if (currentViewMode === 'both') {
+                imgArea.style.display = 'flex';
+                textArea.style.display = 'flex';
+                imgArea.style.height = '60%';
+                textArea.style.height = '40%';
+            } else if (currentViewMode === 'pic') {
+                imgArea.style.display = 'flex';
+                textArea.style.display = 'none';
+                imgArea.style.height = '100%';
+            } else if (currentViewMode === 'word') {
+                imgArea.style.display = 'none';
+                textArea.style.display = 'flex';
+                textArea.style.height = '100%';
+            }
+        }
+
+        function enlargeImage() {
+            // Only allow enlarging if it's a lesson, or if it's a review and the cover is already revealed
+            if (appMode === 'lesson' || coverImg.classList.contains('revealed')) {
+                const fsModal = document.getElementById('fullscreen-modal');
+                const fsImg = document.getElementById('fs-img');
+                const fsEmoji = document.getElementById('fs-emoji');
+                
+                const data = vocabularyList[currentIndex];
+                if (data.isEmoji) {
+                    fsImg.style.display = 'none';
+                    fsEmoji.style.display = 'block';
+                    fsEmoji.innerText = data.image || '❓';
+                } else {
+                    fsEmoji.style.display = 'none';
+                    fsImg.style.display = 'block';
+                    fsImg.src = data.image;
+                }
+                fsModal.classList.remove('hide-section');
+            }
+        }
+
+        function closeFullscreen() {
+            document.getElementById('fullscreen-modal').classList.add('hide-section');
+        }
+
+        function loadCard(index, animationClass = 'slide-center') {
+            const data = vocabularyList[index];
+            cardContainer.className = `card-container ${animationClass}`;
+            
+            setTimeout(() => {
+                // Populate Text
+                textElement.innerText = data.word;
+                
+                // Populate Image/Emoji
+                if (data.isEmoji) {
+                    imgElement.style.display = 'none';
+                    emojiElement.style.display = 'flex';
+                    emojiElement.innerText = data.image || '❓';
+                } else {
+                    emojiElement.style.display = 'none';
+                    imgElement.style.display = 'block';
+                    imgElement.src = data.image;
+                    imgElement.alt = data.word;
+                }
+                
+                // Handle Covers based on Mode
+                if (appMode === 'lesson') {
+                    coverImg.classList.add('revealed');
+                    coverText.classList.add('revealed');
+                } else {
+                    // Review mode: hide them initially
+                    coverImg.classList.remove('revealed');
+                    coverText.classList.remove('revealed');
+                }
+                
+                clearCanvas();
+                cardContainer.className = 'card-container slide-center';
+            }, 50);
+        }
+
+        function reveal(type) {
+            if (appMode === 'lesson') return; // Already revealed
+
+            if (type === 'img') {
+                coverImg.classList.add('revealed');
+            } else if (type === 'text') {
+                coverText.classList.add('revealed');
+                if (autoSoundToggle.checked) {
+                    playSound();
+                }
+            }
+        }
+
+        function nextCard() {
+            cardContainer.className = 'card-container slide-out-left';
+            setTimeout(() => {
+                currentIndex = (currentIndex + 1) % vocabularyList.length;
+                loadCard(currentIndex, 'slide-in-right');
+            }, 300);
+        }
+
+        function prevCard() {
+            cardContainer.className = 'card-container slide-out-right';
+            setTimeout(() => {
+                currentIndex = (currentIndex - 1 + vocabularyList.length) % vocabularyList.length;
+                loadCard(currentIndex, 'slide-in-left');
+            }, 300);
+        }
+
+        function shuffleCard() {
+            cardContainer.className = 'card-container slide-out-left'; 
+            setTimeout(() => {
+                let newIndex = currentIndex;
+                while(newIndex === currentIndex && vocabularyList.length > 1) {
+                     newIndex = Math.floor(Math.random() * vocabularyList.length);
+                }
+                currentIndex = newIndex;
+                loadCard(currentIndex, 'slide-in-right');
+            }, 300);
+        }
+
+        function playSound() {
+            const word = vocabularyList[currentIndex].audioText;
+            if ('speechSynthesis' in window) {
+                // Cancel existing to prevent queue build-up
+                window.speechSynthesis.cancel();
+                const utterance = new SpeechSynthesisUtterance(word);
+                utterance.lang = 'en-US'; 
+                utterance.rate = 0.85; 
+                utterance.pitch = 1.1; // Slightly higher pitch for engaging tone
+                window.speechSynthesis.speak(utterance);
+            }
+        }
+
+        const canvas = document.getElementById('drawing-canvas');
+        const ctx = canvas.getContext('2d');
+        const screenDiv = document.getElementById('app-screen');
+        
+        let isDrawing = false;
+        let currentTool = 'pen'; 
+        let currentColor = '#000000';
+        let brushSize = 6;
+
+        function resizeCanvas() {
+            // Only resize if flashcard view is active to avoid 0 dimensions
+            if(!viewFlashcard.classList.contains('active')) return;
+            
+            // We get dimensions of the container that holds the card and viewbar
+            // subtracting toolbar height approx
+            canvas.width = screenDiv.clientWidth;
+            canvas.height = screenDiv.clientHeight - 80; // Rough toolbar deduction
+            
+            // Re-apply styles after resize
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+        }
+        window.addEventListener('resize', resizeCanvas);
+
+        function getMousePos(canvas, evt) {
+            const rect = canvas.getBoundingClientRect();
+            let clientX = evt.clientX;
+            let clientY = evt.clientY;
+            
+            if (evt.touches && evt.touches.length > 0) {
+                clientX = evt.touches[0].clientX;
+                clientY = evt.touches[0].clientY;
+            }
+            
+            return {
+                x: clientX - rect.left,
+                y: clientY - rect.top
+            };
+        }
+
+        function startPosition(e) {
+            if (currentTool === 'cursor') return;
+            isDrawing = true;
+            draw(e);
+        }
+
+        function endPosition() {
+            isDrawing = false;
+            ctx.beginPath();
+        }
+
+        function draw(e) {
+            if (!isDrawing) return;
+            e.preventDefault();
+
+            const pos = getMousePos(canvas, e);
+
+            ctx.lineWidth = currentTool === 'eraser' ? 40 : brushSize;
+
+            if (currentTool === 'eraser') {
+                ctx.globalCompositeOperation = "destination-out";
+            } else {
+                ctx.globalCompositeOperation = "source-over";
+                ctx.strokeStyle = currentColor;
+            }
+
+            ctx.lineTo(pos.x, pos.y);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(pos.x, pos.y);
+        }
+
+        canvas.addEventListener('mousedown', startPosition);
+        canvas.addEventListener('mouseup', endPosition);
+        canvas.addEventListener('mousemove', draw);
+        canvas.addEventListener('mouseout', endPosition);
+
+        canvas.addEventListener('touchstart', startPosition, { passive: false });
+        canvas.addEventListener('touchend', endPosition);
+        canvas.addEventListener('touchmove', draw, { passive: false });
+
+        function setTool(toolName) {
+            currentTool = toolName;
+            document.querySelectorAll('.tool-btn').forEach(btn => btn.classList.remove('active-tool'));
+            
+            const btn = document.getElementById(`tool-${toolName}`);
+            if(btn) btn.classList.add('active-tool');
+
+            if (toolName === 'cursor') {
+                canvas.classList.remove('active');
+            } else {
+                canvas.classList.add('active');
+            }
+        }
+
+        function setColor(color, element) {
+            currentColor = color;
+            setTool('pen');
+            document.querySelectorAll('.color-swatch').forEach(swatch => swatch.classList.remove('selected'));
+            element.classList.add('selected');
+        }
+
+        function clearCanvas() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+
+    </script>
+</body>
+</html>
